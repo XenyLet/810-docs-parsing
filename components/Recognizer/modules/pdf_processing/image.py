@@ -4,7 +4,7 @@ import itertools
 import cv2
 import numpy as np
 
-from modules.utils import min_max, maxSub_non_null, custom_tuple_sorting
+from components.Recognizer.modules.pdf_processing.utils import min_max, maxSub_non_null, custom_tuple_sorting
 
 
 def change_horizontal_lines(detected_horizontal_lines_main):

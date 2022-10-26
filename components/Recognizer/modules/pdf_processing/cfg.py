@@ -3,4 +3,4 @@ POPPLER_PATH = r'C:\Users\daniil.kobelev\Downloads\poppler-0.68.0_x86\poppler-0.
 # INPUT_PDFS_DIR  ='C:/Users/daniil.kobelev/Downloads/123'
 import os
 
-INPUT_PDFS_DIR = os.path.join(os.path.dirname(__file__), "src_pdf")
+INPUT_PDFS_DIR = os.path.join(os.path.dirname(__file__), "../../../../src_pdf")

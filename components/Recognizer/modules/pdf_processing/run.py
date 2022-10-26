@@ -5,26 +5,21 @@ start = datetime.datetime.now()
 
 # In[1]:
 import pytesseract as pyt
-import itertools
-import functools
 import pandas as pd
 import cv2
-from matplotlib import pyplot as plt
 from pdf2image import convert_from_path
 
 import numpy as np
 import warnings
 
 import cfg
-from modules.image import change_horizontal_lines, find_main_lines
 
 warnings.filterwarnings("ignore")
 
-from modules.printer import create_report
-from modules.utils import get_key
-from modules.fileio import search_pdf_in_folder, read_json_file
-from modules.image import sort_contours, merge_lines, change_horizontal_lines, find_main_lines
-# In[2]:
+from components.Recognizer.modules.pdf_processing.printer import create_report
+from components.Recognizer.modules.pdf_processing.utils import get_key
+from components.Recognizer.modules.pdf_processing.fileio import search_pdf_in_folder, read_json_file
+from components.Recognizer.modules.pdf_processing.image import sort_contours, merge_lines, change_horizontal_lines, find_main_lines
 
 
 # Функция для второго пункта(Разделяем документ на картинки, того же разрешения (dpi) что и исходный документ)
@@ -239,188 +234,189 @@ def find_cells_tz(merge_line, image, merge_line_cut):  # нахождение и
         counter += 1
     return bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr
 
+def run(pdf_filename):
 
-# ### заполнение списков пдф из пути(path надо задавать самому) (первый пункт тз)
+    # ### заполнение списков пдф из пути(path надо задавать самому) (первый пункт тз)
 
-# In[3]:
-
-
-path = cfg.INPUT_PDFS_DIR
-list_of_elements, specification, other = search_pdf_in_folder(path)
-
-# ### разделение пдф на изображения (второй пункт тз)
-
-# In[4]:
+    # In[3]:
 
 
-for path in list_of_elements:
-    img_list_of_elems = break_up_pdf_to_array_png(path, 200)
-for path in specification:
-    img_specification = break_up_pdf_to_array_png(path, 200)
-'''for image in img_specification:
-    plt.figure(num=None, figsize=(30, 30), dpi=80, facecolor='w', edgecolor='k')
-    plt.imshow(image)
-    plt.show()
-for image in list_of_elements:
-    plt.figure(num=None, figsize=(30, 30), dpi=80, facecolor='w', edgecolor='k')
-    plt.imshow(image)
-    plt.show()'''
+    path = cfg.INPUT_PDFS_DIR
+    list_of_elements, specification, other = search_pdf_in_folder(path)
 
-# ### распознавание линий (третий пункт тз)
+    # ### разделение пдф на изображения (второй пункт тз)
 
-# In[5]:
+    # In[4]:
 
 
-# pyt.pytesseract.tesseract_cmd = cfg.PYTESSERACT_CMD
-
-# In[22]:
-
-
-img_matrix = []
-unrecognized_list = []
-'''for path in list_of_elements:
-    try:
-        print(path)
+    for path in list_of_elements:
         img_list_of_elems = break_up_pdf_to_array_png(path, 200)
-        for img in img_list_of_elems:
+    for path in specification:
+        img_specification = break_up_pdf_to_array_png(path, 200)
+    '''for image in img_specification:
+        plt.figure(num=None, figsize=(30, 30), dpi=80, facecolor='w', edgecolor='k')
+        plt.imshow(image)
+        plt.show()
+    for image in list_of_elements:
+        plt.figure(num=None, figsize=(30, 30), dpi=80, facecolor='w', edgecolor='k')
+        plt.imshow(image)
+        plt.show()'''
+
+    # ### распознавание линий (третий пункт тз)
+
+    # In[5]:
+
+
+    # pyt.pytesseract.tesseract_cmd = cfg.PYTESSERACT_CMD
+
+    # In[22]:
+
+
+    img_matrix = []
+    unrecognized_list = []
+    '''for path in list_of_elements:
+        try:
+            print(path)
+            img_list_of_elems = break_up_pdf_to_array_png(path, 200)
+            for img in img_list_of_elems:
+                im = []
+                image, merge_line, merge_line_cut = find_lines_tz(img)
+                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(merge_line, image, merge_line_cut)
+                for i in range(len(img_arr[0])):
+                    for j in range(len(img_arr)-1, -1, -1):
+                        d = []
+                        ver = []
+                        data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type = 'dict')
+                        text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
+                        plt.figure(num=None, figsize=(2, 2), dpi=80, facecolor='w', edgecolor='k')
+                        plt.imshow(img_arr[j][i])
+                        plt.show()
+                        for v in data['conf']:
+                            if v != '-1':
+                                ver.append(float(v))
+                        print(text)
+                        print(np.mean(ver))
+                        print('================================')
+                        if text[:-1]:
+                            d.append(text[:-1])
+                            d.append(np.mean(ver))
+                            im.append(d)
+                img_matrix.append(im)
+        except Exception:
+            unrecognized_list.append(path)'''
+    for path in specification:
+        #    try:
+        img_specification = break_up_pdf_to_array_png(path, 200)
+        for img in img_specification:
             im = []
             image, merge_line, merge_line_cut = find_lines_tz(img)
-            bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(merge_line, image, merge_line_cut)
+            bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(merge_line, image,
+                                                                                                          merge_line_cut)
             for i in range(len(img_arr[0])):
-                for j in range(len(img_arr)-1, -1, -1):
+                for j in range(len(img_arr) - 1, -1, -1):
                     d = []
                     ver = []
-                    data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type = 'dict')
+                    cnt = 1
+                    data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
                     text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
-                    plt.figure(num=None, figsize=(2, 2), dpi=80, facecolor='w', edgecolor='k')
-                    plt.imshow(img_arr[j][i])
-                    plt.show()
-                    for v in data['conf']:
-                        if v != '-1':
-                            ver.append(float(v))
+                    # plt.figure(num=None, figsize=(2, 2), dpi=80, facecolor='w', edgecolor='k')
+                    # plt.imshow(img_arr[j][i])
+                    # plt.show()
+                    # for v in data['conf']:
+                    # if v != '-1':
+                    # ver.append(float(v))
                     print(text)
                     print(np.mean(ver))
                     print('================================')
                     if text[:-1]:
+                        print(text)
                         d.append(text[:-1])
-                        d.append(np.mean(ver))
-                        im.append(d)
+                        # d.append(np.mean(ver))
+                    else:
+                        d.append(' ')
+                    im.append(d)
             img_matrix.append(im)
-    except Exception:
-        unrecognized_list.append(path)'''
-for path in specification:
-    #    try:
-    img_specification = break_up_pdf_to_array_png(path, 200)
-    for img in img_specification:
-        im = []
-        image, merge_line, merge_line_cut = find_lines_tz(img)
-        bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(merge_line, image,
-                                                                                                      merge_line_cut)
-        for i in range(len(img_arr[0])):
-            for j in range(len(img_arr) - 1, -1, -1):
-                d = []
-                ver = []
-                cnt = 1
-                data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
-                text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
-                # plt.figure(num=None, figsize=(2, 2), dpi=80, facecolor='w', edgecolor='k')
-                # plt.imshow(img_arr[j][i])
-                # plt.show()
-                # for v in data['conf']:
-                # if v != '-1':
-                # ver.append(float(v))
-                print(text)
-                print(np.mean(ver))
-                print('================================')
-                if text[:-1]:
-                    print(text)
-                    d.append(text[:-1])
-                    # d.append(np.mean(ver))
-                else:
-                    d.append(' ')
-                im.append(d)
-        img_matrix.append(im)
-#    except Exception:
-#        unrecognized_list.append(path)
-#        print('Документ ', path, ' Не распознан')
+    #    except Exception:
+    #        unrecognized_list.append(path)
+    #        print('Документ ', path, ' Не распознан')
 
 
-# In[7]:
+    # In[7]:
 
-fin = datetime.datetime.now()
-print(fin - start)
+    fin = datetime.datetime.now()
+    print(fin - start)
 
-print(unrecognized_list)
+    print(unrecognized_list)
 
-# In[23]:
-
-
-print(img_matrix[0])
-
-# In[24]:
+    # In[23]:
 
 
-df = []
-df_tmp = []
-c = 1
-for d in img_matrix[0]:
-    if c == 7:
-        df.append(df_tmp)
-        df_tmp = []
-    else:
-        df_tmp.append(d)
-        c += 1
+    print(img_matrix[0])
 
-# In[25]:
+    # In[24]:
 
 
-df = pd.DataFrame(df)
-print(df)
+    df = []
+    df_tmp = []
+    c = 1
+    for d in img_matrix[0]:
+        if c == 7:
+            df.append(df_tmp)
+            df_tmp = []
+        else:
+            df_tmp.append(d)
+            c += 1
 
-# In[29]:
-
-
-data = img_matrix[0]
-w = len(data) / 7
-data = np.resize(data, (int(w), 7))
-
-# In[30]:
-
-
-data = pd.DataFrame(data)
-print(data)
-
-# In[31]:
+    # In[25]:
 
 
-data.to_excel('./data_810.xlsx')
+    df = pd.DataFrame(df)
+    print(df)
 
-# In[11]:
+    # In[29]:
+
+
+    data = img_matrix[0]
+    w = len(data) / 7
+    data = np.resize(data, (int(w), 7))
+
+    # In[30]:
+
+
+    data = pd.DataFrame(data)
+    print(data)
+
+    # In[31]:
+
+
+    data.to_excel('./data_810.xlsx')
+
+    # In[11]:
 
 
 
 
-path_to_json = "ekb.json"
-elements, dictionary = read_json_file(path_to_json)
+    path_to_json = "ekb.json"
+    elements, dictionary = read_json_file(path_to_json)
 
-# In[12]:
-
-
-elems = []
-for elem in img_matrix[0]:
-    elems.append(elem[0])
-
-# In[13]:
+    # In[12]:
 
 
-elems
+    elems = []
+    for elem in img_matrix[0]:
+        elems.append(elem[0])
 
-# In[14]:
+    # In[13]:
 
 
-create_report(elems, elements, dictionary)
+    elems
 
-# In[ ]:
+    # In[14]:
+
+
+    create_report(elems, elements, dictionary)
+
+    # In[ ]:
 
 
 
