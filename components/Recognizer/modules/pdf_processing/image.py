@@ -4,7 +4,7 @@ import itertools
 import cv2
 import numpy as np
 
-from components.Recognizer.modules.pdf_processing.utils import min_max, maxSub_non_null, custom_tuple_sorting
+from components.Recognizer.modules.pdf_processing.utils import min_max, maxSub_non_null, custom_tuple_sorting, get_key
 
 
 def change_horizontal_lines(detected_horizontal_lines_main):
@@ -283,11 +283,11 @@ def find_digit_coordinates(image):
     return all_contours
 
 
-def crop_digit(image, x0, y0, x1, y1):
-    img_crop = image[y0 - 2:y1 + 2, x0 - 2:x1 + 2]
-    res_crop_img = cv2.resize(img_crop, (28, 28))
-    prediction_digit = predicting(res_crop_img)
-    return prediction_digit
+# def crop_digit(image, x0, y0, x1, y1):
+#     img_crop = image[y0 - 2:y1 + 2, x0 - 2:x1 + 2]
+#     res_crop_img = cv2.resize(img_crop, (28, 28))
+#     prediction_digit = predicting(res_crop_img)
+#     return prediction_digit
 
 
 def detect_contour_in_contours(all_contours):
@@ -302,3 +302,88 @@ def image_binarization_2(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, img_bin = cv2.threshold(gray, 170, 255, cv2.THRESH_BINARY)
     return img_bin
+
+
+def delete_vert_line(det_vert_line):
+    """
+    Принимает: массив вертикальных линий
+    Возвращает: массив вертикальных линий с зануленными боковыми линиями
+    """
+    detected_vertical_lines_1 = np.rot90(det_vert_line, k=-1)
+    d = {}
+    for i in range(len(detected_vertical_lines_1[:, :10])):
+        d[i] = detected_vertical_lines_1[i].sum() / 255
+    d_1 = {}
+    total = 0
+    k = 0
+    for key, value in d.items():
+        if value == 0:
+            if total > 0:
+                d_1[key - k] = total
+            total = 0
+            k = 0
+        if value != 0:
+            total += value
+            k += 1
+    max_1 = max(d_1.values())
+    max_2 = 0
+    for key, value in d_1.items():
+        if value > max_2 and value < max_1:
+            max_2 = value
+    i1 = get_key(d_1, max_1)
+    i2 = get_key(d_1, max_2)
+    if i1 > i2:
+        i2, i1 = i1, i2
+    for key, value in d.items():
+        if key < i1:
+            d[key] = 0
+    for key, value in d.items():
+        if value == 0:
+            detected_vertical_lines_1[key] = 0
+    return np.rot90(detected_vertical_lines_1)
+
+
+def get_horlines_coor(detected_horizontal_lines):
+    hor_lines_coor = []
+    x1 = -1
+    x2 = -1
+    y1 = -1
+    y2 = -1
+    flag = False
+    for i in range(len(detected_horizontal_lines)):
+        flag = False
+        for j in range(len(detected_horizontal_lines[i])):
+            if (detected_horizontal_lines[i][j] == 255) and (not flag):
+                x1 = j
+                y1 = i
+                flag = True
+            if (detected_horizontal_lines[i][j] == 0) and flag:
+                x2 = j
+                y2 = i
+                hor_lines_coor.append([x1, y1, x2, y2])
+                break
+    return hor_lines_coor
+
+
+def get_vertlines_coor(detected_vertical_lines):
+    ver_lines_coor = []
+    x1 = -1
+    x2 = -1
+    y1 = -1
+    y2 = -1
+    cnt = 0
+    max_cnt = len(detected_vertical_lines[0])
+    flag = False
+    for i in range(max_cnt):
+        flag = False
+        for j in range(len(detected_vertical_lines)):
+            if (detected_vertical_lines[j][i] == 255) & (not flag):
+                x1 = i
+                y1 = j
+                flag = True
+            if (detected_vertical_lines[j][i] == 0) & flag:
+                x2 = i
+                y2 = j
+                ver_lines_coor.append([x1, y1, x2, y2])
+                break
+    return ver_lines_coor

@@ -53,3 +53,8 @@ def create_report(perechni, elements, dictionary):
                 print('Элемент', perech, 'есть в БД, но пока характеристики не распознаны. \n')
         else:
             print('Элемент:', perech, 'не распознан')
+
+
+if __name__ == '__main__':
+    elements, dictionary = read_json_file(path_to_json)
+    create_report(elems, elements, dictionary)

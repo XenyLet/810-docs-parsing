@@ -1,6 +1,7 @@
 # Custom
 src_pdf
 res
+/components/Recognizer/recognition_model/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

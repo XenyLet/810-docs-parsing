@@ -1,12 +1,15 @@
-from MessageInterface import MessageInterface
+from .MessageInterface import MessageInterface
+from .TextRecognizer import TextRecognizer
 import threading
-import pdf_processing.run as img_processor
+from .pdf_processing import run as img_processor
 
 
 class Worker(threading.Thread):
-    def __init__(self, message_interface: MessageInterface):
+    def __init__(self, message_interface: MessageInterface,
+                 text_recognizer: TextRecognizer):
         super().__init__()
         self.message_interface = message_interface
+        self.text_recognizer = text_recognizer
 
     def _process_message(self, message) -> None:
         pass
@@ -18,8 +21,10 @@ class Worker(threading.Thread):
 
 
 class RecognizeWorker(Worker):
-    def __init__(self, message_interface: MessageInterface):
-        super().__init__(message_interface)
+    def __init__(self, 
+                 message_interface: MessageInterface, 
+                 text_recognizer: TextRecognizer):
+        super().__init__(message_interface, text_recognizer)
 
     def _process_message(self, message: dict) -> None:
         """
@@ -30,7 +35,8 @@ class RecognizeWorker(Worker):
         }
         """
         recognition_results = img_processor.run(
-            message["file_name"]
+            message["file_name"],
+            self.text_recognizer
         )
         result = {
             "status": "temp",

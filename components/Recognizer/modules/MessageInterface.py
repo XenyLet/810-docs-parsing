@@ -1,3 +1,4 @@
+import time
 from queue import Queue
 import json
 
@@ -11,6 +12,7 @@ class MessageInterface:
 
     @staticmethod
     def _encode_message(msg):
+        print("recognize 1 cell", time.time())
         return json.dumps(msg)
 
     def receive_message(self):
