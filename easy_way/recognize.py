@@ -12,7 +12,7 @@ def recognizing(path_to_pdf):
     print('recognizing')
     list_of_elements, specification, other, img_list_of_elems, img_specification = create_list_of_pdf(path_to_pdf)
 
-    for path in list_of_elements:
+    for path in specification:
         try:
             # img_list_of_elems = break_up_pdf_to_array_png(path, 200)
             for img in img_specification:
@@ -36,7 +36,7 @@ def recognizing(path_to_pdf):
                 img_matrix.append(im)
         except Exception:
             unrecognized_list.append(path)
-    for path in specification:
+    for path in list_of_elements:
         try:
             # img_specification = break_up_pdf_to_array_png(path, 200)
             for img in img_list_of_elems:
