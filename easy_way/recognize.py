@@ -47,9 +47,10 @@ def recognizing(path_to_pdf):
                     for j in range(len(img_arr) - 1, -1, -1):
                         try:
                             d = []
-                            ver = []
+                            ver = []  # ver -> veroyatnost' -> probability (seems like text detection probabilities)
                             data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
                             text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
+                            v = 1  # just quickfix to move on. TODO: fix later
                             ver.append(float(v))
                             d.append(text[:-1])
                             d.append(np.mean(ver))
