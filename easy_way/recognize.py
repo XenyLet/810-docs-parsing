@@ -37,7 +37,6 @@ def recognizing(path_to_pdf):
         except Exception:
             unrecognized_list.append(path)
     for path in list_of_elements:
-        try:
             # img_specification = break_up_pdf_to_array_png(path, 200)
             for img in img_list_of_elems:
                 im = []
@@ -46,17 +45,20 @@ def recognizing(path_to_pdf):
                     merge_line, image, merge_line_cut)
                 for i in range(len(img_arr[0])):
                     for j in range(len(img_arr) - 1, -1, -1):
-                        d = []
-                        ver = []
-                        data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
-                        text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
-                        ver.append(float(v))
-                        d.append(text[:-1])
-                        d.append(np.mean(ver))
-                        im.append(d)
+                        try:
+                            d = []
+                            ver = []
+                            data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
+                            text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
+                            ver.append(float(v))
+                            d.append(text[:-1])
+                            d.append(np.mean(ver))
+                            im.append(d)
+                        except Exception as exc:
+                            print("ERROR:", str(exc))
+                            unrecognized_list.append(path)
                 img_matrix.append(im)
-        except Exception:
-            unrecognized_list.append(path)
+
 
     elems = []
     for elem in img_matrix[0]:
