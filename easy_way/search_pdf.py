@@ -38,6 +38,7 @@ def create_list_of_pdf(path_to_create_list_pdf):
 
     list_of_elements, specification, other = search_pdf_in_folder(path_to_create_list_pdf)
 
+    img_list_of_elems, img_specification = [], []
     for path in list_of_elements:
         img_list_of_elems = break_up_pdf_to_array_png(path, 200)
     for path in specification:
