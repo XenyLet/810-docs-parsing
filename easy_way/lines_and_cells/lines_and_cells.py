@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import itertools
 import functools
-from combine_lines import change_horizontal_lines
+from easy_way.lines_and_cells.lines_and_cells import change_horizontal_lines
 
 
 def find_main_lines(image, type):

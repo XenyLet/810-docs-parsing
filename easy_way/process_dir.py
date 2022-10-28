@@ -1,7 +1,7 @@
 from search_pdf import split_pdf_to_pages_images, search_pdf_in_folder
-from lines import find_lines_tz, find_cells_tz
+from easy_way.lines_and_cells.lines_and_cells import find_lines_tz, find_cells_tz
 
-from TextRecognizer import EasyOcrRecognizer
+from easy_way.recognition.TextRecognizer import EasyOcrRecognizer
 
 def process_page(page, text_recognizer, f_type):
     """
@@ -47,7 +47,7 @@ def process_page(page, text_recognizer, f_type):
     return recognitions
 
 
-def recognizing(path_to_pdf_dir):
+def process_dir(path_to_pdf_dir):
     text_recognizer = EasyOcrRecognizer(allow_list="""0123456789!"%'()+,-.:;<=>?«±µ»Ω
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 abcdefghijklmnopqrstuvwxyz
