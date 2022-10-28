@@ -268,10 +268,14 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
 
         cnt += 1
 
-    counter = 0
-    img_arr = [[], [], [], [], [], [], []]
+    # we must take only 4х? table (from top to metadata block)
+
+    img_rows = []
+    cur_row = []
     for i in range(len(bounding_boxes_to_predict)):
         x, y, w, h = bounding_boxes_to_predict[i][0], bounding_boxes_to_predict[i][1], bounding_boxes_to_predict[i][2], bounding_boxes_to_predict[i][3]
-        img_arr[counter % 7].append(image[y-1:y+h+1, x-1:x+w+1])
-        counter += 1
-    return bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr
+        cur_row.append(image[y-1:y+h+1, x-1:x+w+1])
+        if len(cur_row) == 4:
+            img_rows.append(cur_row)
+            cur_row = []
+    return bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_rows

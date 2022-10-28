@@ -18,14 +18,14 @@ def recognizing(path_to_pdf):
             for img in img_specification:
                 im = []
                 image, merge_line, merge_line_cut = find_lines_tz(img)
-                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(
+                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, cells_to_predict = find_cells_tz(
                     merge_line, image, merge_line_cut)
-                for i in range(len(img_arr[0])):
-                    for j in range(len(img_arr) - 1, -1, -1):
+                for row in cells_to_predict:
+                    for cell in row:
                         d = []
                         ver = []
-                        data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
-                        text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
+                        data = pyt.image_to_data(cell, lang='rus+eng', output_type='dict')
+                        text = pyt.image_to_string(cell, lang='rus+eng', config='--psm 4')
                         for v in data['conf']:
                             if v != '-1':
                                 ver.append(float(v))
@@ -41,15 +41,15 @@ def recognizing(path_to_pdf):
             for img in img_list_of_elems:
                 im = []
                 image, merge_line, merge_line_cut = find_lines_tz(img)
-                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_arr = find_cells_tz(
+                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, cells_to_predict = find_cells_tz(
                     merge_line, image, merge_line_cut)
-                for i in range(len(img_arr[0])):
-                    for j in range(len(img_arr) - 1, -1, -1):
+                for row in cells_to_predict:
+                    for cell in row:
                         try:
                             d = []
                             ver = []  # ver -> veroyatnost' -> probability (seems like text detection probabilities)
-                            data = pyt.image_to_data(img_arr[j][i], lang='rus+eng', output_type='dict')
-                            text = pyt.image_to_string(img_arr[j][i], lang='rus+eng', config='--psm 4')
+                            data = pyt.image_to_data(cell, lang='rus+eng', output_type='dict')
+                            text = pyt.image_to_string(cell, lang='rus+eng', config='--psm 4')
                             v = 1  # just quickfix to move on. TODO: fix later
                             ver.append(float(v))
                             d.append(text[:-1])
