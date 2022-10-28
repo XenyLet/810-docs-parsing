@@ -3,6 +3,8 @@ import numpy as np
 from pathlib import Path
 from pdf2image import convert_from_path
 from config import path_poopler, path_to_pdf
+from easy_way.deskew_img import deskew_img
+
 
 #Функция для первого пункта(Производим поиск PDF документов в указанном каталоге и подкаталогах)
 def search_pdf_in_folder(path):
@@ -41,7 +43,16 @@ def create_list_of_pdf(path_to_create_list_pdf):
     img_list_of_elems, img_specification = [], []
     for path in list_of_elements:
         img_list_of_elems = break_up_pdf_to_array_png(path, 200)
+        deskewed_imgs = []
+        for i, img in enumerate(img_list_of_elems):
+            if i == 0:
+                page_type = "elements_list_page_1"
+            else:
+                page_type = "elements_list_other_pages"
+            deskewed_imgs.append(deskew_img(img, page_type))
+        img_list_of_elems = deskewed_imgs
     for path in specification:
         img_specification = break_up_pdf_to_array_png(path, 200)
+        img_specification = [deskew_img(image, "specification") for image in img_specification[1:]]
     return list_of_elements, specification, other, img_list_of_elems, img_specification
 
