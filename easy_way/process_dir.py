@@ -24,6 +24,8 @@ def process_page(page, text_recognizer, f_type):
         merge_line, page, merge_line_cut)
 
     recognitions = []
+    if not cells_to_predict:
+        return recognitions
 
     recognitions_row = []
     cells_l = len(cells_to_predict) * len(cells_to_predict[0])
@@ -31,14 +33,14 @@ def process_page(page, text_recognizer, f_type):
         for j, cell in enumerate(row):
             text, conf, bbox = text_recognizer.read_text(cell)
             any_text_found = text != ""
-            recognitions_row.append(
-                (
+            recognition =(
                     any_text_found,
                     text,
                     conf,
                     bbox
                 )
-            )
+
+            recognitions_row.append(recognition)
 
             get_page_progress(cells_l, i, j)
         recognitions.append(recognitions_row)
@@ -77,10 +79,13 @@ abcdefghijklmnopqrstuvwxyz
 
     for section in pages_per_pdf:
         for pdf_path, pages_from_pdf in pages_per_pdf[section].items():
-            for page in pages_from_pdf:
+            recognitions_per_pdf[section][pdf_path] = []
+            for i, page in enumerate(pages_from_pdf):
+                print(f"Starting page {i} / {len(pages_from_pdf)} recognition")
                 recognitions = process_page(page, text_recognizer, section)
 
-                recognitions_per_pdf[section][pdf_path] = recognitions
+                recognitions_per_pdf[section][pdf_path].extend(recognitions)
 
 
     print(recognitions_per_pdf)
+    return recognitions_per_pdf
