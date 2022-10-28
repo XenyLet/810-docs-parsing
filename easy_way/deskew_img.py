@@ -30,7 +30,6 @@ DESKEW_PARAMS = {
 def draw_corners(corners, image):
     for index, c in enumerate(corners):
         character = chr(65 + index)
-        print(character, ':', c)
         cv2.putText(image, character, tuple(c), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
 def _extract_corners(cnt, epsilon):
@@ -179,7 +178,6 @@ def deskew_img(image: np.ndarray, page_type: str):
     cv2.drawContours(test_img, max_contour, -1, (255, 255, 0), 10)
 
     corners = detect_corners_from_contour(max_contour, page_type, test_img.copy())
-    print('\nThe corner points are ...\n')
     draw_corners(corners, test_img)
 
     bounding_rect = bounding_box(corners)
