@@ -232,8 +232,8 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
     max_cell_s = 0
     import random as rd
     cnt = 0
-    for cell in bounding_boxes:
-        rgb = [rd.randint(0,255),rd.randint(0,255),rd.randint(0,255)]
+    for i, cell in enumerate(bounding_boxes_cut):
+        rgb = [rd.randint(0,200),rd.randint(0,200),rd.randint(0,200)]
         x, y, w, h = cell[0], cell[1], cell[2], cell[3]
         if (max_cell_s < w*h) and (cnt != 0):
             max_cell_s = w*h
@@ -244,6 +244,9 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
         image_with_cells[y:y+h,x:x+w,0] = rgb[0]
         image_with_cells[y:y+h,x:x+w,1] = rgb[1]
         image_with_cells[y:y+h,x:x+w,2] = rgb[2]
+
+        cv2.putText(image_with_cells, str(i), (x+w//2, y+h//2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
         cnt += 1
 
     image_name = image[max_cell_coords_s[1]:max_cell_coords_s[1]+max_cell_coords_s[3],max_cell_coords_s[0]:max_cell_coords_s[0]+max_cell_coords_s[2]].copy()
@@ -251,14 +254,18 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
     image_with_cells_to_predict = image.copy()
     bounding_boxes_to_predict = []
     cnt = 0
-    for cell in bounding_boxes_cut:
-        rgb = [rd.randint(0, 255), rd.randint(0, 255), rd.randint(0, 255)]
+    for i, cell in enumerate(bounding_boxes_cut):
+        rgb = [rd.randint(0, 200), rd.randint(0, 200), rd.randint(0, 200)]
         x, y, w, h = cell[0], cell[1], cell[2], cell[3]
         if y<(max_cell_coords_w[1]) and (cnt != 0):
             bounding_boxes_to_predict.append(cell)
             image_with_cells_to_predict[y:y+h, x:x+w, 0] = rgb[0]
             image_with_cells_to_predict[y:y+h, x:x+w, 1] = rgb[1]
             image_with_cells_to_predict[y:y+h, x:x+w, 2] = rgb[2]
+
+        cv2.putText(image_with_cells_to_predict, str(i), (x + w // 2, y + h // 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2,
+                    cv2.LINE_AA)
+
         cnt += 1
 
     counter = 0
