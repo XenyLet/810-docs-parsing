@@ -1,68 +1,86 @@
-import pytesseract as pyt
-import numpy as np
-from search_pdf import create_list_of_pdf
+from search_pdf import split_pdf_to_pages_images, search_pdf_in_folder
 from lines import find_lines_tz, find_cells_tz
-import matplotlib.pyplot as plt
-from config import path_tesseract
 
-def recognizing(path_to_pdf):
-    img_matrix = []
-    unrecognized_list = []
-    # pyt.pytesseract.tesseract_cmd = path_tesseract
+from TextRecognizer import EasyOcrRecognizer
+
+def process_page(page, text_recognizer, f_type):
+    """
+    # returns 2-d array of followin structure:
+    [
+        [(any_text_found, text, confidence, bounding_box), (...), ...],
+        [...],
+        ...
+    ]
+
+    Therefore recognitions represent table but in text form
+    """
+    def get_page_progress(total_cells_to_predict, cur_i, cur_j):
+        cur_cell_n = cur_i * 4 + cur_j
+        if round(cur_cell_n) % 10 == 0:
+            print(f"Page progress: {cur_cell_n} / {total_cells_to_predict}")
+
+    merge_line, merge_line_cut = find_lines_tz(page)
+    bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, cells_to_predict = find_cells_tz(
+        merge_line, page, merge_line_cut)
+
+    recognitions = []
+
+    recognitions_row = []
+    cells_l = len(cells_to_predict) * len(cells_to_predict[0])
+    for i, row in enumerate(cells_to_predict):
+        for j, cell in enumerate(row):
+            text, conf, bbox = text_recognizer.read_text(cell)
+            any_text_found = text != ""
+            recognitions_row.append(
+                (
+                    any_text_found,
+                    text,
+                    conf,
+                    bbox
+                )
+            )
+
+            get_page_progress(cells_l, i, j)
+        recognitions.append(recognitions_row)
+        recognitions_row = []
+
+    return recognitions
+
+
+def recognizing(path_to_pdf_dir):
+    text_recognizer = EasyOcrRecognizer(allow_list="""0123456789!"%'()+,-.:;<=>?«±µ»Ω
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ
+абвгдежзиклмнопрстуфхцчшщъыьэюя""")
+
     print('recognizing')
-    list_of_elements, specification, other, img_list_of_elems, img_specification = create_list_of_pdf(path_to_pdf)
 
-    for path in specification:
-        try:
-            # img_list_of_elems = break_up_pdf_to_array_png(path, 200)
-            for img in img_specification:
-                im = []
-                image, merge_line, merge_line_cut = find_lines_tz(img)
-                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, cells_to_predict = find_cells_tz(
-                    merge_line, image, merge_line_cut)
-                for row in cells_to_predict:
-                    for cell in row:
-                        d = []
-                        ver = []
-                        data = pyt.image_to_data(cell, lang='rus+eng', output_type='dict')
-                        text = pyt.image_to_string(cell, lang='rus+eng', config='--psm 4')
-                        for v in data['conf']:
-                            if v != '-1':
-                                ver.append(float(v))
-                        if text[:-1]:
-                            d.append(text[:-1])
-                            d.append(np.mean(ver))
-                            im.append(d)
-                img_matrix.append(im)
-        except Exception:
-            unrecognized_list.append(path)
-    for path in list_of_elements:
-            # img_specification = break_up_pdf_to_array_png(path, 200)
-            for img in img_list_of_elems:
-                im = []
-                image, merge_line, merge_line_cut = find_lines_tz(img)
-                bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, cells_to_predict = find_cells_tz(
-                    merge_line, image, merge_line_cut)
-                for row in cells_to_predict:
-                    for cell in row:
-                        try:
-                            d = []
-                            ver = []  # ver -> veroyatnost' -> probability (seems like text detection probabilities)
-                            data = pyt.image_to_data(cell, lang='rus+eng', output_type='dict')
-                            text = pyt.image_to_string(cell, lang='rus+eng', config='--psm 4')
-                            v = 1  # just quickfix to move on. TODO: fix later
-                            ver.append(float(v))
-                            d.append(text[:-1])
-                            d.append(np.mean(ver))
-                            im.append(d)
-                        except Exception as exc:
-                            print("ERROR:", str(exc))
-                            unrecognized_list.append(path)
-                img_matrix.append(im)
+    file_paths = search_pdf_in_folder(path_to_pdf_dir)
+    list_of_elements, specification, other = file_paths
+
+    pages_per_pdf = {
+        "specification": {
+            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="specification")
+            for file_path in specification
+        },
+        "list_of_elements": {
+            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="list_of_elements")
+            for file_path in list_of_elements
+        }
+    }
+
+    recognitions_per_pdf = {
+        "specification": {},
+        "list_of_elements": {}
+    }
+
+    for section in pages_per_pdf:
+        for pdf_path, pages_from_pdf in pages_per_pdf[section].items():
+            for page in pages_from_pdf:
+                recognitions = process_page(page, text_recognizer, section)
+
+                recognitions_per_pdf[section][pdf_path] = recognitions
 
 
-    elems = []
-    for elem in img_matrix[0]:
-        elems.append(elem[0])
-
-    return elems, unrecognized_list
+    print(recognitions_per_pdf)

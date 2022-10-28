@@ -217,7 +217,7 @@ def find_lines_tz(image):  # третий пункт тз = распознава
                 image_with_counters[i, j, 1] = 111
                 image_with_counters[i, j, 2] = 111
 
-    return image, merge_line, dilated_merge_line_cut
+    return merge_line, dilated_merge_line_cut
 
 def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и выделение ячеек = тз пункт 4 + 5
     united_image = merge_line.copy()
