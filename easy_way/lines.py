@@ -202,6 +202,11 @@ def find_lines_tz(image):  # третий пункт тз = распознава
 
     merge_line_cut = merge_lines(detected_horizontal_lines, delete_vert_line(detected_vertical_lines))
 
+    # A kernel of (3 X 3) ones.
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    # Morphological operation to detect verticle lines from an image
+    dilated_merge_line_cut = cv2.dilate(merge_line_cut, kernel, iterations=3)
+
     # hor_lines_coor = get_horlines_coor(detected_horizontal_lines)
     # ver_lines_coor = get_vertlines_coor(detected_vertical_lines)
 
@@ -212,7 +217,7 @@ def find_lines_tz(image):  # третий пункт тз = распознава
                 image_with_counters[i, j, 1] = 111
                 image_with_counters[i, j, 2] = 111
 
-    return image, merge_line, merge_line_cut
+    return image, merge_line, dilated_merge_line_cut
 
 def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и выделение ячеек = тз пункт 4 + 5
     united_image = merge_line.copy()
