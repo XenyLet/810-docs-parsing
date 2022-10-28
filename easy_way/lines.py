@@ -276,6 +276,8 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
         x, y, w, h = bounding_boxes_to_predict[i][0], bounding_boxes_to_predict[i][1], bounding_boxes_to_predict[i][2], bounding_boxes_to_predict[i][3]
         cur_row.append(image[y-1:y+h+1, x-1:x+w+1])
         if len(cur_row) == 4:
+            # reverse row to preserve left-to-right cells order
+            cur_row.reverse()
             img_rows.append(cur_row)
             cur_row = []
     return bounding_boxes, image_name, longest_image, bounding_boxes_to_predict, img_rows
