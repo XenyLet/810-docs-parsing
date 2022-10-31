@@ -3,7 +3,7 @@ from easy_way.lines_and_cells.lines_and_cells import find_lines_tz, find_cells_t
 
 from easy_way.recognition.TextRecognizer import EasyOcrRecognizer
 
-def process_page(page, text_recognizer, f_type):
+def recognize_table_on_page(page, text_recognizer, f_type):
     """
     # returns 2-d array of followin structure:
     [
@@ -49,7 +49,48 @@ def process_page(page, text_recognizer, f_type):
     return recognitions
 
 
-def process_dir(path_to_pdf_dir):
+def process_dir(path_to_pdf_dir, logger):
+    # TODO: refactor this function to following algorithm:
+    # 1. найти все файлы в директории
+    # 2. для каждого файла:
+    # 3.    вызвать функцию, обрабатывающую файл целиком. Что-нибудь в духе "process_file"
+    # 4. Собрать результаты распознавания файла во что-то более удобное, чем сейчас.
+    # А то текщие структуры слишком монструозны:
+    # pages_per_pdf = {
+    #   "specification": {
+    #       "../path/to/pdf1": [ <numpy array as page 1>, <numpy array as page 2>, ... ],
+    #       "../path/to/pdf2": [ <numpy array as page 1>, <numpy array as page 2>, ... ],
+    #   },
+    #   "list_of_elements" : {
+    #       <same as in "specification">
+    #   }
+    #
+    #
+    # Results are stored in huge thing:
+    #
+    # recognitions_per_pdf = {
+    #   "specification": {
+    #       "../path/to/pdf1": [
+    #           [
+    #               [<recognition for cell (0,0) in main table on page 1>, < --//-- for cell (0,1)>, ...],
+    #               [<recognition for cell (1,0) in main table on page 1>, < --//-- for cell (1,1)>, ...],
+    #               ...
+    #           ],
+    #           [
+    #               [<recognition for cell (0,0) in main table on page 2>, < --//-- for cell (0,1)>, ...],
+    #               [<recognition for cell (1,0) in main table on page 2>, < --//-- for cell (1,1)>, ...],
+    #               ...
+    #           ],
+    #           ...
+    #       ],
+    #       "../path/to/pdf2": [...],
+    #       ...
+    #   },
+    #   "list_of_elements" : {
+    #       <same as in "specification">
+    #   }
+    #
+
     text_recognizer = EasyOcrRecognizer(allow_list="""0123456789!"%'()+,-.:;<=>?«±µ»Ω
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 abcdefghijklmnopqrstuvwxyz
@@ -58,16 +99,16 @@ abcdefghijklmnopqrstuvwxyz
 
     print('recognizing')
 
-    file_paths = search_pdf_in_folder(path_to_pdf_dir)
+    file_paths = search_pdf_in_folder(path_to_pdf_dir, logger)
     list_of_elements, specification, other = file_paths
 
     pages_per_pdf = {
         "specification": {
-            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="specification")
+            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="specification", logger=logger)
             for file_path in specification
         },
         "list_of_elements": {
-            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="list_of_elements")
+            file_path: split_pdf_to_pages_images(path_to_pdf=file_path, _type="list_of_elements", logger=logger)
             for file_path in list_of_elements
         }
     }
@@ -82,7 +123,7 @@ abcdefghijklmnopqrstuvwxyz
             recognitions_per_pdf[section][pdf_path] = []
             for i, page in enumerate(pages_from_pdf):
                 print(f"Starting page {i} / {len(pages_from_pdf)} recognition")
-                recognitions = process_page(page, text_recognizer, section)
+                recognitions = recognize_table_on_page(page, text_recognizer, section)
 
                 recognitions_per_pdf[section][pdf_path].extend(recognitions)
 

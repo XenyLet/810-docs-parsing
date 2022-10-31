@@ -5,7 +5,7 @@ from logg import get_logger
 
 def main():
     logger = get_logger('main')
-    recognitions = process_dir(path_to_pdf_dir)
+    recognitions = process_dir(path_to_pdf_dir, logger)
 
     # found_recognitions = {}
     # for section, pdfs_in_section in recognitions.items():
