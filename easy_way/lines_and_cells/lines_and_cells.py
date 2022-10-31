@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 import functools
 from easy_way.lines_and_cells.combine_lines import change_horizontal_lines
+import traceback
 
 
 def find_main_lines(image, type):
@@ -190,23 +191,43 @@ def get_vertlines_coor(detected_vertical_lines):
     return ver_lines_coor
 
 
-def find_lines_tz(image):  # третий пункт тз = распознавание линий
+def find_lines_tz(image, logger):  # третий пункт тз = распознавание линий
 
     image_with_counters = image.copy()
-    detected_horizontal_lines = find_main_lines(image, 'h')
-    detected_vertical_lines = find_main_lines(image, 'v')
-
-    detected_horizontal_lines = change_horizontal_lines(detected_horizontal_lines)
-
-    merge_line = merge_lines(detected_horizontal_lines, detected_vertical_lines)
-
-    merge_line_cut = merge_lines(detected_horizontal_lines, delete_vert_line(detected_vertical_lines))
-
+    try:
+        detected_horizontal_lines = find_main_lines(image, 'h')
+        logger.info(f"Successfully detected_horizontal_lines")
+    except:
+        logger.error(f"Error detected_horizontal_lines: {traceback.format_exc()}")
+        raise RuntimeError
+    try:
+        detected_vertical_lines = find_main_lines(image, 'v')
+        logger.info(f"Successfully detected_vertical_lines")
+    except:
+        logger.error(f"Error detected_vertical_lines: {traceback.format_exc()}")
+        raise RuntimeError
+    try:
+        detected_horizontal_lines = change_horizontal_lines(detected_horizontal_lines)
+        logger.info(f"Successfully change_horizontal_lines")
+    except:
+        logger.error(f"Error change_horizontal_lines: {traceback.format_exc()}")
+        raise RuntimeError
+    try:
+        merge_line = merge_lines(detected_horizontal_lines, detected_vertical_lines)
+        merge_line_cut = merge_lines(detected_horizontal_lines, delete_vert_line(detected_vertical_lines))
+        logger.info(f"Successfully merge_lines")
+    except:
+        logger.error(f"Error merge_lines: {traceback.format_exc()}")
+        raise RuntimeError
     # A kernel of (3 X 3) ones.
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    # Morphological operation to detect verticle lines from an image
-    dilated_merge_line_cut = cv2.dilate(merge_line_cut, kernel, iterations=3)
-
+    try:
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        # Morphological operation to detect verticle lines from an image
+        dilated_merge_line_cut = cv2.dilate(merge_line_cut, kernel, iterations=3)
+        logger.info(f"Successfully dilate")
+    except:
+        logger.error(f"Error dilate: {traceback.format_exc()}")
+        raise RuntimeError
     # hor_lines_coor = get_horlines_coor(detected_horizontal_lines)
     # ver_lines_coor = get_vertlines_coor(detected_vertical_lines)
 
@@ -219,51 +240,67 @@ def find_lines_tz(image):  # третий пункт тз = распознава
 
     return merge_line, dilated_merge_line_cut
 
-def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и выделение ячеек = тз пункт 4 + 5
+
+def find_cells_tz(merge_line, image, merge_line_cut, logger):  # нахождение и выделение ячеек = тз пункт 4 + 5
     united_image = merge_line.copy()
     united_image_cut = merge_line_cut.copy()
-    contours, hierarchy = cv2.findContours(united_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
-    contours_cut, hierarchy_cut = cv2.findContours(united_image_cut, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
-    #find_coordinates_of_rows(image, united_image, contours)
-    bounding_boxes = sort_contours(contours, "top-to-right")
-    bounding_boxes_cut = sort_contours(contours_cut, "top-to-right")
+    try:
+        contours, hierarchy = cv2.findContours(united_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
+        contours_cut, hierarchy_cut = cv2.findContours(united_image_cut, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[-2:]
+        logger.info(f"Successfully findContours")
+    except:
+        logger.error(f"Error findContours: {traceback.format_exc()}")
+        raise RuntimeError
+    # find_coordinates_of_rows(image, united_image, contours)
+    try:
+        bounding_boxes = sort_contours(contours, "top-to-right")
+        bounding_boxes_cut = sort_contours(contours_cut, "top-to-right")
+        logger.info(f"Successfully sort_contours")
+    except:
+        logger.error(f"Error sort_contours: {traceback.format_exc()}")
+        raise RuntimeError
+
     image_with_cells = image.copy()
     max_cell_w = -1
     max_cell_s = 0
     import random as rd
     cnt = 0
     for i, cell in enumerate(bounding_boxes_cut):
-        rgb = [rd.randint(0,200),rd.randint(0,200),rd.randint(0,200)]
+        rgb = [rd.randint(0, 200), rd.randint(0, 200), rd.randint(0, 200)]
         x, y, w, h = cell[0], cell[1], cell[2], cell[3]
-        if (max_cell_s < w*h) and (cnt != 0):
-            max_cell_s = w*h
+        if (max_cell_s < w * h) and (cnt != 0):
+            max_cell_s = w * h
             max_cell_coords_s = [x, y, w, h]
         if (max_cell_w < w) and (cnt != 0):
             max_cell_w = w
             max_cell_coords_w = [x, y, w, h]
-        image_with_cells[y:y+h,x:x+w,0] = rgb[0]
-        image_with_cells[y:y+h,x:x+w,1] = rgb[1]
-        image_with_cells[y:y+h,x:x+w,2] = rgb[2]
+        image_with_cells[y:y + h, x:x + w, 0] = rgb[0]
+        image_with_cells[y:y + h, x:x + w, 1] = rgb[1]
+        image_with_cells[y:y + h, x:x + w, 2] = rgb[2]
 
-        cv2.putText(image_with_cells, str(i), (x+w//2, y+h//2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.putText(image_with_cells, str(i), (x + w // 2, y + h // 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2,
+                    cv2.LINE_AA)
 
         cnt += 1
 
-    image_name = image[max_cell_coords_s[1]:max_cell_coords_s[1]+max_cell_coords_s[3],max_cell_coords_s[0]:max_cell_coords_s[0]+max_cell_coords_s[2]].copy()
-    longest_image = image[max_cell_coords_w[1]:max_cell_coords_w[1]+max_cell_coords_w[3],max_cell_coords_w[0]:max_cell_coords_w[0]+max_cell_coords_w[2]].copy()
+    image_name = image[max_cell_coords_s[1]:max_cell_coords_s[1] + max_cell_coords_s[3],
+                 max_cell_coords_s[0]:max_cell_coords_s[0] + max_cell_coords_s[2]].copy()
+    longest_image = image[max_cell_coords_w[1]:max_cell_coords_w[1] + max_cell_coords_w[3],
+                    max_cell_coords_w[0]:max_cell_coords_w[0] + max_cell_coords_w[2]].copy()
     image_with_cells_to_predict = image.copy()
     bounding_boxes_to_predict = []
     cnt = 0
     for i, cell in enumerate(bounding_boxes_cut):
         rgb = [rd.randint(0, 200), rd.randint(0, 200), rd.randint(0, 200)]
         x, y, w, h = cell[0], cell[1], cell[2], cell[3]
-        if y<(max_cell_coords_w[1]) and (cnt != 0):
+        if y < (max_cell_coords_w[1]) and (cnt != 0):
             bounding_boxes_to_predict.append(cell)
-            image_with_cells_to_predict[y:y+h, x:x+w, 0] = rgb[0]
-            image_with_cells_to_predict[y:y+h, x:x+w, 1] = rgb[1]
-            image_with_cells_to_predict[y:y+h, x:x+w, 2] = rgb[2]
+            image_with_cells_to_predict[y:y + h, x:x + w, 0] = rgb[0]
+            image_with_cells_to_predict[y:y + h, x:x + w, 1] = rgb[1]
+            image_with_cells_to_predict[y:y + h, x:x + w, 2] = rgb[2]
 
-        cv2.putText(image_with_cells_to_predict, str(i), (x + w // 2, y + h // 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2,
+        cv2.putText(image_with_cells_to_predict, str(i), (x + w // 2, y + h // 2), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 255, 255), 2,
                     cv2.LINE_AA)
 
         cnt += 1
@@ -273,8 +310,9 @@ def find_cells_tz(merge_line, image, merge_line_cut): #нахождение и �
     img_rows = []
     cur_row = []
     for i in range(len(bounding_boxes_to_predict)):
-        x, y, w, h = bounding_boxes_to_predict[i][0], bounding_boxes_to_predict[i][1], bounding_boxes_to_predict[i][2], bounding_boxes_to_predict[i][3]
-        cur_row.append(image[y-1:y+h+1, x-1:x+w+1])
+        x, y, w, h = bounding_boxes_to_predict[i][0], bounding_boxes_to_predict[i][1], bounding_boxes_to_predict[i][2], \
+                     bounding_boxes_to_predict[i][3]
+        cur_row.append(image[y - 1:y + h + 1, x - 1:x + w + 1])
         if len(cur_row) == 4:
             # reverse row to preserve left-to-right cells order
             cur_row.reverse()
