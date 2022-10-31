@@ -1,8 +1,10 @@
 from process_dir import process_dir
 from easy_way.reports.create_report import create_report_xlsx
 from config import path_to_pdf_dir
+from logg import get_logger
 
 def main():
+    logger = get_logger('main')
     recognitions = process_dir(path_to_pdf_dir)
 
     # found_recognitions = {}
